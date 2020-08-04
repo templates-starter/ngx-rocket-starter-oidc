@@ -8,21 +8,35 @@ import { filter, map, switchMap } from 'rxjs/operators';
 import { environment } from '@env/environment';
 import { Logger, untilDestroyed } from '@core';
 import { I18nService } from '@app/i18n';
+import { OAuthService } from 'angular-oauth2-oidc';
+import { JwksValidationHandler } from 'angular-oauth2-oidc-jwks';
+import { authCodeFlowConfig } from './auth.config';
 
 const log = new Logger('App');
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit, OnDestroy {
+  constructor(
+    private router: Router,
+    private activatedRoute: ActivatedRoute,
+    private titleService: Title,
+    private translateService: TranslateService,
+    private i18nService: I18nService,
+    private oauthService: OAuthService
+  ) {
+    this.oauthService.configure(authCodeFlowConfig);
 
-  constructor(private router: Router,
-              private activatedRoute: ActivatedRoute,
-              private titleService: Title,
-              private translateService: TranslateService,
-              private i18nService: I18nService) { }
+    this.oauthService.tokenValidationHandler = new JwksValidationHandler();
+
+    // Load Discovery Document and then try to login the user
+    this.oauthService.loadDiscoveryDocument().then(() => {
+      this.oauthService.tryLogin();
+    });
+  }
 
   ngOnInit() {
     // Setup logger
@@ -32,11 +46,10 @@ export class AppComponent implements OnInit, OnDestroy {
 
     log.debug('init');
 
-
     // Setup translations
     this.i18nService.init(environment.defaultLanguage, environment.supportedLanguages);
 
-    const onNavigationEnd = this.router.events.pipe(filter(event => event instanceof NavigationEnd));
+    const onNavigationEnd = this.router.events.pipe(filter((event) => event instanceof NavigationEnd));
 
     // Change page title on navigation or language change, based on route data
     merge(this.translateService.onLangChange, onNavigationEnd)
@@ -48,11 +61,11 @@ export class AppComponent implements OnInit, OnDestroy {
           }
           return route;
         }),
-        filter(route => route.outlet === 'primary'),
-        switchMap(route => route.data),
+        filter((route) => route.outlet === 'primary'),
+        switchMap((route) => route.data),
         untilDestroyed(this)
       )
-      .subscribe(event => {
+      .subscribe((event) => {
         const title = event.title;
         if (title) {
           this.titleService.setTitle(this.translateService.instant(title));
@@ -63,5 +76,4 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.i18nService.destroy();
   }
-
 }

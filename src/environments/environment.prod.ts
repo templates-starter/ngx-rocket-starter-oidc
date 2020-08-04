@@ -12,5 +12,11 @@ export const environment = {
   version: env.npm_package_version,
   serverUrl: 'https://api.chucknorris.io',
   defaultLanguage: 'en-US',
-  supportedLanguages: ['en-US', 'fr-FR']
+  supportedLanguages: ['en-US', 'fr-FR'],
+  oidc: {
+    issuer: '',
+    clientId: '',
+    scope: 'openid profile email offline_access api',
+    responseType: 'code',
+  },
 };

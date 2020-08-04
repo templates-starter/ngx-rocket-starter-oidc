@@ -3,42 +3,36 @@ import { CommonModule } from '@angular/common';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { RouteReuseStrategy, RouterModule } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
+import { OAuthModule } from 'angular-oauth2-oidc';
 
 import { RouteReusableStrategy } from './route-reusable-strategy';
 import { ApiPrefixInterceptor } from './http/api-prefix.interceptor';
 import { ErrorHandlerInterceptor } from './http/error-handler.interceptor';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    HttpClientModule,
-    TranslateModule,
-    RouterModule
-  ],
+  imports: [CommonModule, HttpClientModule, TranslateModule, RouterModule, OAuthModule.forRoot()],
   providers: [
     {
       provide: HTTP_INTERCEPTORS,
       useClass: ApiPrefixInterceptor,
-      multi: true
+      multi: true,
     },
     {
       provide: HTTP_INTERCEPTORS,
       useClass: ErrorHandlerInterceptor,
-      multi: true
+      multi: true,
     },
     {
       provide: RouteReuseStrategy,
-      useClass: RouteReusableStrategy
-    }
-  ]
+      useClass: RouteReusableStrategy,
+    },
+  ],
 })
 export class CoreModule {
-
   constructor(@Optional() @SkipSelf() parentModule: CoreModule) {
     // Import guard
     if (parentModule) {
       throw new Error(`${parentModule} has already been loaded. Import Core module in the AppModule only.`);
     }
   }
-
 }
